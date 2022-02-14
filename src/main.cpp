@@ -6,8 +6,6 @@
 #include "line_graph.hpp"
 #include "network.hpp"
 
-U8G2_SH1106_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0);
-
 //---------------------------------------------------------------------------------
 class Unit {
 public:
@@ -22,14 +20,18 @@ public:
     }
   }
 
-  void loop() {
+  void loop(bool updateTempline) {
     sensor.loop();
 
     if (sensor.isDataReady()) {
-      line.add(sensor.getInt16MilliCelsius_Temperature());
+      if (updateTempline) {
+        line.add(sensor.getInt16MilliCelsius_Temperature());
+      }
       strncpy(temp, sensor.getTextTemperature(), sizeof(temp));
     } else {
-      line.addEmptyValue();
+      if (updateTempline) {
+        line.addEmptyValue();
+      }
       clear();
     }
   }
@@ -45,17 +47,18 @@ public:
 };
 //---------------------------------------------------------------------------------
 
+U8G2_SH1106_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0);
 #define CHAR_HEIGHT 10
 #define CHAR_WIDTH 6
 #define CHAR_FONT u8g2_font_6x10_mr
 #define LINE_OFFSET (CHAR_WIDTH * 6)
 #define LINE_WIDTH (128 - LINE_OFFSET)
-
+#define LINE_MARGIN 2
 Unit units[] = {
-  {D5, LINE_WIDTH, CHAR_HEIGHT - 1},
-  {D6, LINE_WIDTH, CHAR_HEIGHT - 1},
-  {D7, LINE_WIDTH, CHAR_HEIGHT - 1},
-  {D8, LINE_WIDTH, CHAR_HEIGHT - 1}
+  {D5, LINE_WIDTH, CHAR_HEIGHT},
+  {D6, LINE_WIDTH, CHAR_HEIGHT},
+  {D7, LINE_WIDTH, CHAR_HEIGHT},
+  {D3, LINE_WIDTH, CHAR_HEIGHT}
 };
 
 //---------------------------------------------------------------------------------
@@ -81,13 +84,38 @@ void setup() {
 }
 
 //---------------------------------------------------------------------------------
+bool tictoc = false;
+#define LOOP_MEASURE_DELAY 1000
+
+#define DISPLAY_SCALER 10 // 1 means 1.5 minutes on OLED screen, 10 means 15 minutes
+
+uint32_t measureTempLoopMs = 0;
+uint32_t timelineScalerCounter = DISPLAY_SCALER;
+bool updateTempline = false;
+
 void loop () {
   network::loop();
-  String ipAddr = "IP: " + network::localIP();
+
+  // --------------------------------
+  auto now = millis();
+  if ((now - measureTempLoopMs) < LOOP_MEASURE_DELAY){
+    return;
+  }
+  measureTempLoopMs = now;
+  //---------------------------------
+  updateTempline = false;
+  timelineScalerCounter--;
+  if (timelineScalerCounter == 0) {
+    timelineScalerCounter = DISPLAY_SCALER;
+    updateTempline = true;
+  }
+
+  String ipAddr = "IP: " + network::localIP() + (tictoc? " +" : " x");
+  tictoc = tictoc ^ true;
 
   network::NetResponse response;
   for (auto& unit : units) {
-    unit.loop(); // measure temp is here
+    unit.loop(updateTempline); // measure temp is here
     if (unit.exists) {
       response.add("{\"P" + String(unit.sensor.pin) + "\":", true);
       if (unit.sensor.isDataReady()) {
@@ -100,6 +128,7 @@ void loop () {
   }
   network::setResponse(response);
 
+  //---------------------------------
   u8g2.firstPage();
   do {
     u8g2.setFont(CHAR_FONT);
@@ -107,17 +136,16 @@ void loop () {
 
     uint8_t lineNum = 2;
     for (auto& unit : units) {
-      u8g2.drawStr(0, CHAR_HEIGHT * lineNum, unit.temp);
+      yield(); // helps with freezing
+      u8g2.drawStr(0, ((CHAR_HEIGHT + LINE_MARGIN) * lineNum), unit.temp);
       if (unit.exists) {
         for (uint8_t i = 0; i < unit.line.size ; i++) {
           if(unit.line.valueExists(i)){
-            u8g2.drawPixel(LINE_OFFSET + i, (CHAR_HEIGHT * lineNum) - unit.line.getValue(i));
+            u8g2.drawPixel(LINE_OFFSET + i, ((CHAR_HEIGHT + LINE_MARGIN) * lineNum) - unit.line.getValue(i));
           }
         }
       }
       lineNum++;
     }
   } while ( u8g2.nextPage() );
-
-  delay(1000);
 }
