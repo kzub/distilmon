@@ -5,7 +5,7 @@
 
 namespace DS1820 {
 
-#define DS1820_READ_INTERVAL 750 // is a MAX, may be faster
+#define DS1820_READ_INTERVAL 2000 // is a MAX, may be faster
 
 class Sensor {
  public:

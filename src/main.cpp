@@ -37,7 +37,7 @@ public:
   }
 
   void clear() {
-    strncpy(temp, "----", sizeof(temp));
+    strncpy(temp, "-----", sizeof(temp));
   }
 
   DS1820::Sensor sensor;
@@ -85,9 +85,9 @@ void setup() {
 
 //---------------------------------------------------------------------------------
 bool tictoc = false;
-#define LOOP_MEASURE_DELAY 1000
+#define LOOP_MEASURE_DELAY 2000
 
-#define DISPLAY_SCALER 10 // 1 means 1.5 minutes on OLED screen, 10 means 15 minutes
+#define DISPLAY_SCALER 10 // 1 means 3 minutes on OLED screen, 10 means 30 minutes
 
 uint32_t measureTempLoopMs = 0;
 uint32_t timelineScalerCounter = DISPLAY_SCALER;
