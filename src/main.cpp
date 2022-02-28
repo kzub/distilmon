@@ -61,6 +61,10 @@ Unit units[] = {
   {D3, LINE_WIDTH, CHAR_HEIGHT}
 };
 
+#define LOOP_MEASURE_DELAY 2000
+#define DISPLAY_SCALER 5 // LINE_WIDTH *  (60 / DISPLAY_SCALER * LOOP_MEASURE_DELAY/
+
+
 //---------------------------------------------------------------------------------
 void setup() {
   u8g2.begin();
@@ -81,13 +85,12 @@ void setup() {
   } while ( u8g2.nextPage() );
 
   network::setup();
+
+  Serial.printf("Display capacity: %d minutes\n", DISPLAY_SCALER * (LINE_WIDTH / (60000 / LOOP_MEASURE_DELAY)));
 }
 
 //---------------------------------------------------------------------------------
 bool tictoc = false;
-#define LOOP_MEASURE_DELAY 2000
-
-#define DISPLAY_SCALER 10 // 1 means 3 minutes on OLED screen, 10 means 30 minutes
 
 uint32_t measureTempLoopMs = 0;
 uint32_t timelineScalerCounter = DISPLAY_SCALER;
