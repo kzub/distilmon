@@ -9,7 +9,7 @@
 //---------------------------------------------------------------------------------
 class Unit {
 public:
-  Unit(uint8_t pin, uint8_t lineSize, uint8_t lineHeight) : sensor(pin), line(lineSize, lineHeight) {
+  Unit(String name, uint8_t pin, uint8_t lineSize, uint8_t lineHeight) : name(name), sensor(pin), line(lineSize, lineHeight) {
     clear();
   }
 
@@ -40,6 +40,7 @@ public:
     strncpy(temp, "-----", sizeof(temp));
   }
 
+  String name;
   DS1820::Sensor sensor;
   LineGraph line;
   bool exists = false;
@@ -55,10 +56,10 @@ U8G2_SH1106_128X64_NONAME_1_HW_I2C u8g2(U8G2_R0);
 #define LINE_WIDTH (128 - LINE_OFFSET)
 #define LINE_MARGIN 2
 Unit units[] = {
-  {D5, LINE_WIDTH, CHAR_HEIGHT},
-  {D6, LINE_WIDTH, CHAR_HEIGHT},
-  {D7, LINE_WIDTH, CHAR_HEIGHT},
-  {D3, LINE_WIDTH, CHAR_HEIGHT}
+  {"P1", D5, LINE_WIDTH, CHAR_HEIGHT},
+  {"P2", D6, LINE_WIDTH, CHAR_HEIGHT},
+  {"P3", D7, LINE_WIDTH, CHAR_HEIGHT},
+  {"P4", D3, LINE_WIDTH, CHAR_HEIGHT}
 };
 
 #define LOOP_MEASURE_DELAY 2000
@@ -120,7 +121,7 @@ void loop () {
   for (auto& unit : units) {
     unit.loop(updateTempline); // measure temp is here
     if (unit.exists) {
-      response.add("{\"P" + String(unit.sensor.pin) + "\":", true);
+      response.add("{\"" + String(unit.name) + "\":", true);
       if (unit.sensor.isDataReady()) {
         response.add(unit.temp);
       } else {

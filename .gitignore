@@ -1,0 +1,4 @@
+.pio
+scripts/config.js
+*.sublime-project
+*.sublime-workspace
