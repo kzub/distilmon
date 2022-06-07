@@ -11,7 +11,11 @@ log(`RegStation: ${hostRegStation}`);
 log(`InfluxDB: ${hostInfluxDB}`);
 
 const checkValues = process.argv.slice(2);
-log(`Checking values: ${checkValues}`)
+if (!checkValues.length) {
+  console.log("use check values format: P1:77 P2:78 ...");
+  return
+}
+log(`Checking values: ${checkValues} `)
 
 let query =  'SELECT mean("value") FROM "distilmon" WHERE time >= now() - 1m GROUP BY time(10s), "pin" fill(null)';
 /* response example:
