@@ -114,7 +114,7 @@ const char* Sensor::getTextTemperature() {
   }
 
   char FractText[5];
-  snprintf(FractText, 3, "%d", Fract);
+  snprintf(FractText, 3, "%0.2d", Fract);
   snprintf(temp, sizeof(temp) - 1, "%.2d.%c%c", Whole, FractText[0], FractText[1]);
   return temp;
 }
